@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manulife Investor Persona</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  *{box-sizing:border-box;}
+  html,body{ margin:0; padding:0; height:100%; background:#fff; font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; overflow:hidden; }
+  #app{ position:fixed; inset:0; display:flex; align-items:center; justify-content:center; padding:0; background:#E9EEEA; }
+  /* Fills the whole display; at 1080x1920 it maps 1:1, on other sizes it scales to fit with no frame */
+  .stage{ position:relative; height:100vh; width:calc(100vh * 1080 / 1920); max-width:100vw; max-height:calc(100vw * 1920 / 1080); margin:auto; overflow:hidden; background:#fff; }
+  @supports (height:100dvh){ .stage{ height:100dvh; width:calc(100dvh * 1080 / 1920); } }
+
+  .screen{ position:absolute; inset:0; display:none; }
+  .screen.active{ display:block; }
+  .layer{ position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; -webkit-user-drag:none; }
+
+  .hit{ position:absolute; background:transparent; border:none; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .hit-ring{ position:absolute; border-radius:3.2% / 26%; pointer-events:none; opacity:0; transition:opacity .12s ease; box-shadow:0 0 0 4px #00AC5B inset; background:rgba(0,172,91,0.12); }
+  .hit-ring.show{ opacity:1; }
+
+  .btn-hit{ position:absolute; display:block; line-height:0; background:transparent; border:none; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .btn-hit img{ width:100%; height:100%; object-fit:contain; display:block; pointer-events:none; }
+  .btn-hit[disabled]{ opacity:0.35; pointer-events:none; }
+
+  /* Disclaimer page */
+  .stage{ container-type:inline-size; }
+  .disc-wrap{ position:absolute; left:9%; top:24%; width:82%; }
+  .disc-title{ font-size:6.2cqw; font-weight:800; color:#00AC5B; margin-bottom:5cqw; }
+  .disc-body p{ font-size:4.4cqw; line-height:1.55; color:#2b3a31; margin:0 0 4cqw 0; }
+  .disc-body a{ color:#00823F; font-weight:600; }
+
+  /* Name + Email combined form screen */
+  .contact-form{ position:absolute; left:9%; top:23%; width:82%; }
+  .contact-title{ font-size:6.4cqw; font-weight:800; color:#00823F; margin-bottom:6cqw; line-height:1.3; }
+  .field-group{ margin-bottom:5.5cqw; }
+  .field-group > label:not(.consent){ display:block; font-size:4.6cqw; font-weight:700; color:#00AC5B; margin-bottom:2cqw; }
+  .field-group input[type=text], .field-group input[type=email]{
+    width:100%; padding:3.6cqw 4cqw; border-radius:2cqw; border:0.35cqw solid #BFE3CC;
+    background:#fff; color:#132A1E; font-size:4.6cqw; font-family:inherit; box-sizing:border-box;
+  }
+  .field-group input[type=text]:focus, .field-group input[type=email]:focus{ outline:none; border-color:#00AC5B; }
+  .consent{ display:flex; align-items:flex-start; gap:3cqw; margin-top:3.5cqw; font-size:3.1cqw; line-height:1.5; color:#4a564d; font-weight:400; cursor:pointer; }
+  .consent input{ width:5.6cqw; height:5.6cqw; flex:0 0 auto; margin:0.3cqw 0 0 0; accent-color:#00AC5B; cursor:pointer; }
+  .consent a{ color:#00823F; font-weight:600; }
+  /* Start page T&Cs: centered, small so it never covers the artwork */
+  .tnc{ position:absolute; left:8%; top:63.2%; width:84%; text-align:center; font-size:2.5cqw; line-height:1.5; color:#4a564d; pointer-events:none; }
+  .contact-fine{ font-size:3.3cqw; line-height:1.55; color:#6f7d73; margin-top:5cqw; }
+  .contact-fine a{ color:#00823F; }
+
+  /* Start-page T&C tick-box */
+  .tnc-check{ position:absolute; left:5%; width:90%; top:79%; display:flex; align-items:center; justify-content:center; gap:2.4cqw; font-size:2.6cqw; font-weight:700; color:#2b3a31; cursor:pointer; white-space:nowrap; }
+  .tnc-check input{ width:5cqw; height:5cqw; accent-color:#00AC5B; flex:0 0 auto; margin:0; cursor:pointer; }
+  /* Adviser ID (appears from 7 Jan 2027) */
+  #adviserGroup[hidden]{ display:none; }
+  .contact-form.with-adviser{ top:14.5%; }
+  .contact-form.with-adviser .contact-title{ margin-bottom:4cqw; }
+  /* Action buttons (Save / Share / Explore) */
+  .pill{ position:absolute; left:14%; width:72%; height:6.9%; display:flex; align-items:center; justify-content:center; gap:2.4cqw;
+         border:none; border-radius:3.4cqw; font-family:"Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif; font-weight:800;
+         font-size:5cqw; letter-spacing:.03em; text-transform:uppercase; color:#fff; cursor:pointer; text-decoration:none;
+         -webkit-tap-highlight-color:transparent; line-height:1.1; text-align:center; padding:0 3cqw; }
+  .pill svg{ width:5.8cqw; height:5.8cqw; flex:0 0 auto; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .pill svg.solid{ fill:#fff; stroke:none; }
+  .pill.green{ background:#00A758; } .pill.fb{ background:#1877F2; } .pill.navy{ background:#0000C2; }
+  .pill:active{ transform:scale(.98); }
+  #resultImg{ transition:opacity .2s ease; }
+</style>
+</head>
+<body>
+<div id="app"><div class="stage" id="stage">
+
+  <!-- INTRO -->
+  <section class="screen active" id="screen-intro">
+    <img class="layer" src="" data-src="bg_logo">
+    <img class="layer" src="" data-src="start_text">
+    <img class="layer" style="left:9%; top:42%; width:24%; height:auto;" src="" data-src="ari_full">
+    <img class="layer" style="left:38.5%; top:42%; width:24%; height:auto;" src="" data-src="urie_full">
+    <img class="layer" style="left:68%; top:42%; width:24%; height:auto;" src="" data-src="milo_full">
+    <div class="tnc">This quiz is designed purely for entertainment and non-educational purposes. It does not constitute financial advice, nor is it an official representation of Manulife Investments' products or services. Your responses will not impact any investment decisions, and participation is voluntary. By participating in this quiz, participants are deemed to have read, understood and agreed to these Terms and Conditions.</div>
+    <label class="tnc-check" for="inTerms"><input id="inTerms" type="checkbox"><span>I have read and agree to the Terms and Conditions.</span></label>
+    <button class="btn-hit" id="startBtn" disabled style="left:22%; bottom:6%; width:56%; aspect-ratio:600/180;" onclick="goTo('contact')"><img data-src="start_btn"></button>
+  </section>
+
+  <!-- DISCLAIMER (standalone page, right after intro) -->
+  <section class="screen" id="screen-disclaimer">
+    <img class="layer" src="" data-src="bg_logo">
+    <div class="disc-wrap">
+      <div class="disc-title">Important Notice</div>
+      <div class="disc-body">
+        <p>By continuing, you agree to receive marketing materials from <strong>Manulife Investment Management (M) Berhad</strong>.</p>
+        <p>You also agree to its <a href="https://www.manulifeim.com.my/privacy-policy.html" target="_blank">Privacy Policy</a>, the <a href="https://www.manulifeim.com.my/content/dam/wam/my/en/about-us/MY_PDPA.pdf" target="_blank">Personal Data Protection Act [PDPA]</a> notice and its <a href="https://www.manulifeim.com.my/terms-of-use.html" target="_blank">Terms of Use</a>.</p>
+        <p>Your name and email will only be used to send you your result and relevant updates.</p>
+      </div>
+    </div>
+    <button class="btn-hit" style="left:30%; bottom:6%; width:40%; aspect-ratio:400/180;" onclick="goTo('contact')"><img data-src="okay_btn"></button>
+  </section>
+
+  <!-- NAME + EMAIL combined (native form, no image assets) -->
+  <section class="screen" id="screen-contact">
+    <img class="layer" src="" data-src="bg_logo">
+    <div class="contact-form" id="contactForm">
+      <div class="contact-title">Information:</div>
+      <div class="field-group">
+        <label for="inName">Name:</label>
+        <input id="inName" type="text" placeholder="Your name" autocomplete="off">
+      </div>
+      <div class="field-group">
+        <label for="inEmail">Email:</label>
+        <input id="inEmail" type="email" placeholder="name@abc.com" autocomplete="off">
+        <label class="consent" for="inConsent">
+          <input id="inConsent" type="checkbox">
+          <span>By agreeing to submit your email, you are agreeing to receive marketing materials from Manulife Investment Management (M) Berhad, and agree to its <a href="https://www.manulifeim.com.my/privacy-policy.html" target="_blank" rel="noopener">Privacy Policy</a>, <a href="https://www.manulifeim.com.my/content/dam/wam/my/en/about-us/MY_PDPA.pdf" target="_blank" rel="noopener">Personal Data Protection Act [PDPA]</a> and <a href="https://www.manulifeim.com.my/terms-of-use.html" target="_blank" rel="noopener">Terms of Use</a>.</span>
+        </label>
+      </div>
+      <div class="field-group" id="adviserGroup" hidden>
+        <label for="inAdviser">Adviser ID code:</label>
+        <input id="inAdviser" type="text" placeholder="Enter Adviser ID code" autocomplete="off" autocapitalize="characters">
+      </div>
+    </div>
+    <button class="btn-hit" id="contactOkay" style="left:22%; bottom:6%; width:56%; aspect-ratio:600/180;" disabled onclick="submitContact()"><img data-src="start_btn"></button>
+  </section>
+
+  <!-- QUESTIONS injected here -->
+  <div id="questions-root"></div>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <img class="layer" src="" data-src="bg_logo">
+    <img class="layer" src="" data-src="result_text">
+    <img class="layer" id="resultImg" src="" alt="">
+    <button class="pill green" style="top:72.3%;" onclick="saveImage()"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg><span>Save image</span></button>
+    <button class="pill fb" style="top:80.6%;" onclick="shareFacebook()"><svg class="solid" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg><span>Share to Facebook</span></button>
+    <button class="btn-hit" style="left:35%; bottom:2.4%; width:30%; aspect-ratio:400/180;" onclick="goToEnd()"><img data-src="okay_btn"></button>
+  </section>
+
+  <!-- END / DONE -->
+  <section class="screen" id="screen-end">
+    <img class="layer" src="" data-src="bg_logo">
+    <img class="layer" src="" data-src="confetti">
+    <img class="layer" src="" data-src="end_text">
+    <a class="pill navy" id="exploreLink" style="top:76%; font-size:4.4cqw;" href="#" target="_blank" rel="noopener"><span>Explore Manulife Investments</span></a>
+    <button class="btn-hit" style="left:25%; bottom:6%; width:50%; aspect-ratio:570/180;" onclick="restart()"><img data-src="again_btn"></button>
+  </section>
+
+</div></div>
+
+<script>
+const ASSETS = {"again_btn": "assets/again_btn.webp", "ari_full": "assets/ari_full.webp", "back_btn": "assets/back_btn.webp", "bg_logo": "assets/bg_logo.webp", "confetti": "assets/confetti.webp", "end_text": "assets/end_text.webp", "milo_full": "assets/milo_full.webp", "next_btn": "assets/next_btn.webp", "okay_btn": "assets/okay_btn.webp", "q1_A": "assets/q1_A.webp", "q1_B": "assets/q1_B.webp", "q1_C": "assets/q1_C.webp", "q1_graphic": "assets/q1_graphic.webp", "q1_question": "assets/q1_question.webp", "q2_A": "assets/q2_A.webp", "q2_B": "assets/q2_B.webp", "q2_C": "assets/q2_C.webp", "q2_graphic": "assets/q2_graphic.webp", "q2_question": "assets/q2_question.webp", "q3_A": "assets/q3_A.webp", "q3_B": "assets/q3_B.webp", "q3_C": "assets/q3_C.webp", "q3_graphic": "assets/q3_graphic.webp", "q3_question": "assets/q3_question.webp", "q4_A": "assets/q4_A.webp", "q4_B": "assets/q4_B.webp", "q4_C": "assets/q4_C.webp", "q4_graphic": "assets/q4_graphic.webp", "q4_question": "assets/q4_question.webp", "q5_A": "assets/q5_A.webp", "q5_B": "assets/q5_B.webp", "q5_C": "assets/q5_C.webp", "q5_graphic": "assets/q5_graphic.webp", "q5_question": "assets/q5_question.webp", "q6_A": "assets/q6_A.webp", "q6_B": "assets/q6_B.webp", "q6_C": "assets/q6_C.webp", "q6_graphic": "assets/q6_graphic.webp", "q6_question": "assets/q6_question.webp", "q7_A": "assets/q7_A.webp", "q7_B": "assets/q7_B.webp", "q7_C": "assets/q7_C.webp", "q7_graphic": "assets/q7_graphic.webp", "q7_question": "assets/q7_question.webp", "q8_A": "assets/q8_A.webp", "q8_B": "assets/q8_B.webp", "q8_C": "assets/q8_C.webp", "q8_graphic": "assets/q8_graphic.webp", "q8_question": "assets/q8_question.webp", "result_bina": "assets/result_bina.webp", "result_oyen": "assets/result_oyen.webp", "result_rimba": "assets/result_rimba.webp", "result_text": "assets/result_text.webp", "start_btn": "assets/start_btn.webp", "start_text": "assets/start_text.webp", "urie_full": "assets/urie_full.webp"};
+
+// Resolve every element carrying data-src (images referencing the asset map)
+document.querySelectorAll('[data-src]').forEach(el => {
+  const key = el.getAttribute('data-src');
+  if (ASSETS[key]) el.src = ASSETS[key];
+});
+
+/* ---------------- config ---------------- */
+const CONFIG = {
+  SCRIPT_URL: "",                       // paste your Google Apps Script Web App URL here to enable Sheet sync
+  ADVISER_REQUIRED_FROM: "2027-01-07T00:00:00+08:00", // Adviser ID code becomes compulsory from this moment (7 Jan 2027, Malaysia time)
+  EXPLORE_URL: "https://www.manulifeim.com.my/",
+  SHARE_HASHTAG: "",                    // optional campaign hashtag, e.g. "MyInvestingPersonality" (leave blank for none)
+  UTM_CAMPAIGN: "investing_personality_quiz"        // tracking label added to the shared link
+};
+
+/* ---------------- answer hitbox (identical across every question) ---------------- */
+const HIT = {
+  A: { left: 8.61, top: 40.36, width: 80.37, height: 7.86 },
+  B: { left: 8.61, top: 50.89, width: 80.37, height: 7.86 },
+  C: { left: 8.61, top: 61.41, width: 80.37, height: 7.86 }
+};
+const ORDER = ['Oyen','Bina','Rimba']; // A -> Oyen, B -> Bina, C -> Rimba
+
+/* ---------------- build the 8 question screens ---------------- */
+const root = document.getElementById('questions-root');
+for (let q = 1; q <= 8; q++){
+  const section = document.createElement('section');
+  section.className = 'screen';
+  section.id = 'screen-q' + q;
+  section.innerHTML = `
+    <img class="layer" data-src="bg_logo">
+    <img class="layer" data-src="q${q}_graphic">
+    <img class="layer" data-src="q${q}_question">
+    <img class="layer" data-src="q${q}_A">
+    <img class="layer" data-src="q${q}_B">
+    <img class="layer" data-src="q${q}_C">
+    <div class="hit-ring" data-ring="A" style="left:${HIT.A.left}%; top:${HIT.A.top}%; width:${HIT.A.width}%; height:${HIT.A.height}%;"></div>
+    <div class="hit-ring" data-ring="B" style="left:${HIT.B.left}%; top:${HIT.B.top}%; width:${HIT.B.width}%; height:${HIT.B.height}%;"></div>
+    <div class="hit-ring" data-ring="C" style="left:${HIT.C.left}%; top:${HIT.C.top}%; width:${HIT.C.width}%; height:${HIT.C.height}%;"></div>
+    <button class="hit" data-ans="A" style="left:${HIT.A.left}%; top:${HIT.A.top}%; width:${HIT.A.width}%; height:${HIT.A.height}%;"></button>
+    <button class="hit" data-ans="B" style="left:${HIT.B.left}%; top:${HIT.B.top}%; width:${HIT.B.width}%; height:${HIT.B.height}%;"></button>
+    <button class="hit" data-ans="C" style="left:${HIT.C.left}%; top:${HIT.C.top}%; width:${HIT.C.width}%; height:${HIT.C.height}%;"></button>
+    <button class="btn-hit" data-back style="left:6%; bottom:6%; width:38%; aspect-ratio:400/180;"><img data-src="back_btn"></button>
+    <button class="btn-hit" data-next style="left:56%; bottom:6%; width:38%; aspect-ratio:400/180;" disabled><img data-src="next_btn"></button>
+  `;
+  root.appendChild(section);
+
+  // resolve data-src added dynamically
+  section.querySelectorAll('[data-src]').forEach(el => { el.src = ASSETS[el.getAttribute('data-src')]; });
+
+  const backBtn = section.querySelector('[data-back]');
+  const nextBtn = section.querySelector('[data-next]');
+  backBtn.onclick = () => { if (q === 1) goTo('contact'); else goTo('q' + (q-1)); };
+  nextBtn.onclick = () => { if (q === 8) finishQuiz(); else goTo('q' + (q+1)); };
+
+  section.querySelectorAll('.hit').forEach(b => {
+    b.onclick = () => selectAnswer(q, b.getAttribute('data-ans'));
+  });
+}
+
+/* ---------------- state ---------------- */
+const state = { name:'', email:'', adviserId:'', top:null, answers: new Array(8).fill(null) };
+
+function goTo(target){
+  if (target === 'contact') applyAdviserRule();   // re-check the date every time this page opens
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + target).classList.add('active');
+}
+
+/* ---------------- name + email (combined) ---------------- */
+const inName = document.getElementById('inName');
+const inEmail = document.getElementById('inEmail');
+const inAdviser = document.getElementById('inAdviser');
+function adviserRequired(){ return Date.now() >= Date.parse(CONFIG.ADVISER_REQUIRED_FROM); }
+function applyAdviserRule(){
+  const on = adviserRequired();
+  document.getElementById('adviserGroup').hidden = !on;
+  document.getElementById('contactForm').classList.toggle('with-adviser', on);
+  validateContact();
+}
+function validateContact(){
+  const okName = inName.value.trim().length >= 2;
+  const okEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inEmail.value.trim());
+  const okConsent = document.getElementById('inConsent').checked;
+  const okAdviser = !adviserRequired() || inAdviser.value.trim().length >= 3;
+  document.getElementById('contactOkay').disabled = !(okName && okEmail && okConsent && okAdviser);
+}
+inAdviser.addEventListener('input', validateContact);
+document.getElementById('inTerms').addEventListener('change', e => { document.getElementById('startBtn').disabled = !e.target.checked; });
+document.getElementById('exploreLink').href = CONFIG.EXPLORE_URL;
+inName.addEventListener('input', validateContact);
+inEmail.addEventListener('input', validateContact);
+document.getElementById('inConsent').addEventListener('change', validateContact);
+function submitContact(){
+  validateContact();
+  if (document.getElementById('contactOkay').disabled) return;
+  state.name = inName.value.trim();
+  state.email = inEmail.value.trim();
+  state.adviserId = adviserRequired() ? inAdviser.value.trim() : '';
+  goTo('q1');
+}
+
+/* ---------------- answers ---------------- */
+function selectAnswer(q, letter){
+  state.answers[q-1] = letter;
+  const section = document.getElementById('screen-q' + q);
+  ['A','B','C'].forEach(L => {
+    section.querySelector(`.hit-ring[data-ring="${L}"]`).classList.toggle('show', L === letter);
+  });
+  section.querySelector('[data-next]').disabled = false;
+}
+
+/* ---------------- scoring + result ---------------- */
+function computeTop(){
+  const scores = { Oyen:0, Bina:0, Rimba:0 };
+  const letterToTrait = { A:'Oyen', B:'Bina', C:'Rimba' };
+  state.answers.forEach(L => { if (L) scores[letterToTrait[L]]++; });
+  let top = 'Oyen';
+  ORDER.forEach(k => { if (scores[k] > scores[top]) top = k; });
+  return { scores, top };
+}
+
+function finishQuiz(){
+  const { scores, top } = computeTop();
+  state.top = top;
+  const resultKey = { Oyen:'result_oyen', Bina:'result_bina', Rimba:'result_rimba' }[top];
+  document.getElementById('resultImg').src = ASSETS[resultKey];
+  syncSubmission(scores, top);
+  goTo('result');
+}
+
+function goToEnd(){ goTo('end'); }
+
+/* ---------------- Save image + Share to Facebook ---------------- */
+const SLUG = { Oyen:'oyen', Bina:'bina', Rimba:'rimba' };
+function baseDir(){ return new URL('.', location.href); }
+function resultPageUrl(top){
+  const u = new URL('result/' + SLUG[top] + '.html', baseDir());
+  u.searchParams.set('utm_source', 'facebook');
+  u.searchParams.set('utm_medium', 'social_share');
+  u.searchParams.set('utm_campaign', CONFIG.UTM_CAMPAIGN);
+  return u.href;
+}
+function logEvent(type){
+  if (!CONFIG.SCRIPT_URL) return;
+  try{
+    fetch(CONFIG.SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ event:type, timestamp:new Date().toISOString(), email:state.email, persona:state.top }) }).catch(()=>{});
+  }catch(e){}
+}
+async function saveImage(){
+  const top = state.top; if (!top) return;
+  logEvent('save_image');
+  const url = 'share/' + SLUG[top] + '.png';
+  try{
+    const blob = await (await fetch(url)).blob();
+    const file = new File([blob], 'my-investing-personality-' + SLUG[top] + '.png', { type:'image/png' });
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (ios && navigator.canShare && navigator.canShare({ files:[file] })){
+      try{ await navigator.share({ files:[file] }); return; }catch(e){ if (e && e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = file.name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }catch(e){ window.open(url, '_blank'); }   // last resort: open the image so it can be long-pressed and saved
+}
+function shareFacebook(){
+  const top = state.top; if (!top) return;
+  logEvent('share_facebook');
+  let href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(resultPageUrl(top));
+  if (CONFIG.SHARE_HASHTAG) href += '&hashtag=' + encodeURIComponent('#' + CONFIG.SHARE_HASHTAG.replace(/^#/, ''));
+  window.open(href, '_blank', 'noopener');
+}
+
+/* ---------------- backend sync (Google Sheet via Apps Script) + local backup ---------------- */
+function syncSubmission(scores, top){
+  const record = {
+    timestamp: new Date().toISOString(),
+    name: state.name, email: state.email, adviserId: state.adviserId, termsAccepted: 'Agreed', consent: 'Agreed',
+    persona: top, Oyen: scores.Oyen, Bina: scores.Bina, Rimba: scores.Rimba
+  };
+  try{
+    const key = 'investor_persona_responses_v2';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(record);
+    localStorage.setItem(key, JSON.stringify(existing));
+  }catch(e){ console.warn('local backup failed', e); }
+
+  if (!CONFIG.SCRIPT_URL) return;
+  fetch(CONFIG.SCRIPT_URL, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(record)
+  }).catch(()=>{});
+}
+
+/* ---------------- restart ---------------- */
+function restart(){
+  state.name = ''; state.email = ''; state.adviserId = ''; state.top = null; state.answers = new Array(8).fill(null);
+  inName.value = ''; inEmail.value = ''; inAdviser.value = '';
+  document.getElementById('inConsent').checked = false;
+  document.getElementById('inTerms').checked = false;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('contactOkay').disabled = true;
+  for (let q = 1; q <= 8; q++){
+    const section = document.getElementById('screen-q' + q);
+    section.querySelectorAll('.hit-ring').forEach(r => r.classList.remove('show'));
+    section.querySelector('[data-next]').disabled = true;
+  }
+  goTo('intro');
+}
+
+/* ---------------- hidden staff/admin export (tap top-left corner 5x) ---------------- */
+let tapCount = 0, tapTimer = null;
+document.addEventListener('click', (e) => {
+  if (e.clientX < 60 && e.clientY < 60){
+    tapCount++;
+    clearTimeout(tapTimer);
+    tapTimer = setTimeout(()=>{ tapCount = 0; }, 1500);
+    if (tapCount >= 5){
+      tapCount = 0;
+      const list = JSON.parse(localStorage.getItem('investor_persona_responses_v2') || '[]');
+      if (!list.length){ alert('No responses saved on this device yet.'); return; }
+      const headers = Object.keys(list[0]);
+      const rows = [headers.join(',')].concat(list.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(',')));
+      const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'investor_persona_responses.csv';
+      a.click();
+    }
+  }
+});
+</script>
+</body>
+</html>
