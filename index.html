@@ -50,6 +50,7 @@
   .contact-fine a{ color:#00823F; }
 
   /* Start-page T&C tick-box */
+  .consent, .tnc-check, .skip{ -webkit-tap-highlight-color:transparent; }
   .tnc-check{ position:absolute; left:5%; width:90%; top:79%; display:flex; align-items:center; justify-content:center; gap:2.4cqw; font-size:2.6cqw; font-weight:700; color:#2b3a31; cursor:pointer; white-space:nowrap; }
   .tnc-check input{ width:5cqw; height:5cqw; accent-color:#00AC5B; flex:0 0 auto; margin:0; cursor:pointer; }
   /* Adviser ID (appears from 7 Jan 2027) */
@@ -63,8 +64,10 @@
          -webkit-tap-highlight-color:transparent; line-height:1.1; text-align:center; padding:0 3cqw; }
   .pill svg{ width:5.8cqw; height:5.8cqw; flex:0 0 auto; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   .pill svg.solid{ fill:#fff; stroke:none; }
-  .pill.green{ background:#00A758; } .pill.fb{ background:#1877F2; } .pill.navy{ background:#0000C2; }
+  .pill.green{ background:#00A758; } .pill.fb{ background:#1877F2; font-size:4.5cqw; white-space:nowrap; } .pill.navy{ background:#0000C2; }
   .pill:active{ transform:scale(.98); }
+  [hidden]{ display:none !important; }
+  .skip{ position:absolute; left:30%; width:40%; top:89.6%; text-align:center; background:none; border:none; color:#6f7d73; font-size:3.2cqw; text-decoration:underline; cursor:pointer; padding:1.5cqw 0; }
   #resultImg{ transition:opacity .2s ease; }
 </style>
 </head>
@@ -130,9 +133,11 @@
     <img class="layer" src="" data-src="bg_logo">
     <img class="layer" src="" data-src="result_text">
     <img class="layer" id="resultImg" src="" alt="">
-    <button class="pill green" style="top:72.3%;" onclick="saveImage()"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg><span>Save image</span></button>
-    <button class="pill fb" style="top:80.6%;" onclick="shareFacebook()"><svg class="solid" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg><span>Share to Facebook</span></button>
-    <button class="btn-hit" style="left:35%; bottom:2.4%; width:30%; aspect-ratio:400/180;" onclick="goToEnd()"><img data-src="okay_btn"></button>
+    <button class="pill green" id="btnSave" style="top:72.3%;" onclick="saveImage()"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg><span>Save image</span></button>
+    <button class="pill fb" id="btnShare" style="top:80.6%;" onclick="shareFacebook()"><svg class="solid" viewBox="0 0 24 24"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.78-3.89 1.09 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.44 2.89h-2.34v6.99A10 10 0 0 0 22 12z"/></svg><span>Share to Facebook</span></button>
+    <button class="pill green" id="btnStartOver" style="top:72.3%;" hidden onclick="restart()"><span>Start over</span></button>
+    <a class="pill navy" id="btnExplore" style="top:80.6%; font-size:4.4cqw;" hidden href="#" target="_blank" rel="noopener"><span>Explore Manulife Investments</span></a>
+    <button class="skip" id="btnSkip" hidden onclick="showFinish()">Skip</button>
   </section>
 
   <!-- END / DONE -->
@@ -157,8 +162,10 @@ document.querySelectorAll('[data-src]').forEach(el => {
 
 /* ---------------- config ---------------- */
 const CONFIG = {
-  SCRIPT_URL: "",                       // paste your Google Apps Script Web App URL here to enable Sheet sync
-  ADVISER_REQUIRED_FROM: "2027-01-07T00:00:00+08:00", // Adviser ID code becomes compulsory from this moment (7 Jan 2027, Malaysia time)
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwxkH-MHblcce5G0CdZEVoyJFSgDJKWzrzrToRISoc5ef-gEOPgK0Dcz_Dzo_f1GaEr/exec",           // Google Apps Script Web App URL (Sheet sync)
+  ADVISER_FROM: "2027-01-07T00:00:00+08:00",   // Adviser ID code is compulsory from here ...
+  ADVISER_UNTIL: "2027-01-08T00:00:00+08:00",  // ... until here (that is: 7 Jan 2027 only, Malaysia time)
+  ALLOW_SKIP: true,                  // true = guests who don't want to save/share can tap "Skip"
   EXPLORE_URL: "https://www.manulifeim.com.my/",
   SHARE_HASHTAG: "",                    // optional campaign hashtag, e.g. "MyInvestingPersonality" (leave blank for none)
   UTM_CAMPAIGN: "investing_personality_quiz"        // tracking label added to the shared link
@@ -210,7 +217,7 @@ for (let q = 1; q <= 8; q++){
 }
 
 /* ---------------- state ---------------- */
-const state = { name:'', email:'', adviserId:'', top:null, answers: new Array(8).fill(null) };
+const state = { name:'', email:'', adviserId:'', top:null, saved:false, shared:false, answers: new Array(8).fill(null) };
 
 function goTo(target){
   if (target === 'contact') applyAdviserRule();   // re-check the date every time this page opens
@@ -222,7 +229,20 @@ function goTo(target){
 const inName = document.getElementById('inName');
 const inEmail = document.getElementById('inEmail');
 const inAdviser = document.getElementById('inAdviser');
-function adviserRequired(){ return Date.now() >= Date.parse(CONFIG.ADVISER_REQUIRED_FROM); }
+let clockOffset = 0;   // server time minus phone time (fixes phones with a wrong clock)
+function nowMs(){ return Date.now() + clockOffset; }
+function syncClock(){
+  return fetch(location.pathname, { method:'HEAD', cache:'no-store' }).then(r => {
+    const d = r.headers.get('date'); if (!d) return;
+    const t = Date.parse(d) + (parseInt(r.headers.get('age') || '0', 10) * 1000);
+    if (!isNaN(t)) clockOffset = t - Date.now();
+  }).catch(() => {});
+}
+function adviserRequired(){
+  if (new URLSearchParams(location.search).get('adviser') === 'on') return true;   // for testing before 7 Jan
+  const t = nowMs();
+  return t >= Date.parse(CONFIG.ADVISER_FROM) && t < Date.parse(CONFIG.ADVISER_UNTIL);
+}
 function applyAdviserRule(){
   const on = adviserRequired();
   document.getElementById('adviserGroup').hidden = !on;
@@ -239,6 +259,8 @@ function validateContact(){
 inAdviser.addEventListener('input', validateContact);
 document.getElementById('inTerms').addEventListener('change', e => { document.getElementById('startBtn').disabled = !e.target.checked; });
 document.getElementById('exploreLink').href = CONFIG.EXPLORE_URL;
+document.getElementById('btnExplore').href = CONFIG.EXPLORE_URL;
+syncClock().then(applyAdviserRule);
 inName.addEventListener('input', validateContact);
 inEmail.addEventListener('input', validateContact);
 document.getElementById('inConsent').addEventListener('change', validateContact);
@@ -274,6 +296,7 @@ function computeTop(){
 function finishQuiz(){
   const { scores, top } = computeTop();
   state.top = top;
+  resetResultButtons();
   const resultKey = { Oyen:'result_oyen', Bina:'result_bina', Rimba:'result_rimba' }[top];
   document.getElementById('resultImg').src = ASSETS[resultKey];
   syncSubmission(scores, top);
@@ -281,6 +304,24 @@ function finishQuiz(){
 }
 
 function goToEnd(){ goTo('end'); }
+
+/* Result page: Save + Share first; once BOTH are done the buttons change to Start over + Explore */
+function resetResultButtons(){
+  state.saved = false; state.shared = false;
+  document.getElementById('btnSave').hidden = false;
+  document.getElementById('btnShare').hidden = false;
+  document.getElementById('btnStartOver').hidden = true;
+  document.getElementById('btnExplore').hidden = true;
+  document.getElementById('btnSkip').hidden = !CONFIG.ALLOW_SKIP;
+}
+function showFinish(){
+  document.getElementById('btnSave').hidden = true;
+  document.getElementById('btnShare').hidden = true;
+  document.getElementById('btnSkip').hidden = true;
+  document.getElementById('btnStartOver').hidden = false;
+  document.getElementById('btnExplore').hidden = false;
+}
+function checkBothDone(){ if (state.saved && state.shared) showFinish(); }
 
 /* ---------------- Save image + Share to Facebook ---------------- */
 const SLUG = { Oyen:'oyen', Bina:'bina', Rimba:'rimba' };
@@ -296,7 +337,7 @@ function logEvent(type){
   if (!CONFIG.SCRIPT_URL) return;
   try{
     fetch(CONFIG.SCRIPT_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'},
-      body: JSON.stringify({ event:type, timestamp:new Date().toISOString(), email:state.email, persona:state.top }) }).catch(()=>{});
+      body: JSON.stringify({ event:type, timestamp:new Date(nowMs()).toISOString(), email:state.email, persona:state.top }) }).catch(()=>{});
   }catch(e){}
 }
 async function saveImage(){
@@ -308,13 +349,14 @@ async function saveImage(){
     const file = new File([blob], 'my-investing-personality-' + SLUG[top] + '.png', { type:'image/png' });
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (ios && navigator.canShare && navigator.canShare({ files:[file] })){
-      try{ await navigator.share({ files:[file] }); return; }catch(e){ if (e && e.name === 'AbortError') return; }
+      try{ await navigator.share({ files:[file] }); state.saved = true; checkBothDone(); return; }catch(e){ if (e && e.name === 'AbortError') return; }
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = file.name;
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-  }catch(e){ window.open(url, '_blank'); }   // last resort: open the image so it can be long-pressed and saved
+    state.saved = true; checkBothDone();
+  }catch(e){ window.open(url, '_blank'); state.saved = true; checkBothDone(); }   // last resort: open the image so it can be long-pressed and saved
 }
 function shareFacebook(){
   const top = state.top; if (!top) return;
@@ -322,12 +364,13 @@ function shareFacebook(){
   let href = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(resultPageUrl(top));
   if (CONFIG.SHARE_HASHTAG) href += '&hashtag=' + encodeURIComponent('#' + CONFIG.SHARE_HASHTAG.replace(/^#/, ''));
   window.open(href, '_blank', 'noopener');
+  state.shared = true; checkBothDone();
 }
 
 /* ---------------- backend sync (Google Sheet via Apps Script) + local backup ---------------- */
 function syncSubmission(scores, top){
   const record = {
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(nowMs()).toISOString(),
     name: state.name, email: state.email, adviserId: state.adviserId, termsAccepted: 'Agreed', consent: 'Agreed',
     persona: top, Oyen: scores.Oyen, Bina: scores.Bina, Rimba: scores.Rimba
   };
@@ -348,7 +391,7 @@ function syncSubmission(scores, top){
 
 /* ---------------- restart ---------------- */
 function restart(){
-  state.name = ''; state.email = ''; state.adviserId = ''; state.top = null; state.answers = new Array(8).fill(null);
+  state.name = ''; state.email = ''; state.adviserId = ''; state.top = null; state.saved = false; state.shared = false; state.answers = new Array(8).fill(null);
   inName.value = ''; inEmail.value = ''; inAdviser.value = '';
   document.getElementById('inConsent').checked = false;
   document.getElementById('inTerms').checked = false;
