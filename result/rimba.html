@@ -34,6 +34,11 @@
   .pill.green{ background:#00A758; } .pill.navy{ background:#0000C2; }
   .pill:active{ transform:scale(.98); }
   .foot{ position:absolute; left:8%; width:84%; bottom:2.6%; margin:0; text-align:center; font-size:2.7cqw; line-height:1.4; color:#6f7d73; }
+
+  /* Desktop screens only: Manulife widescreen background behind the centred quiz. Phones/portrait screens are unchanged. */
+  @media (min-width:900px) and (min-aspect-ratio:5/4){
+    #app{ background:#E9EEEA url('../assets/bg_desktop.jpg') left top / cover no-repeat; }
+  }
 </style>
 </head>
 <body>

@@ -69,6 +69,11 @@
   [hidden]{ display:none !important; }
   .skip{ position:absolute; left:30%; width:40%; top:89.6%; text-align:center; background:none; border:none; color:#6f7d73; font-size:3.2cqw; text-decoration:underline; cursor:pointer; padding:1.5cqw 0; }
   #resultImg{ transition:opacity .2s ease; }
+
+  /* Desktop screens only: Manulife widescreen background behind the centred quiz. Phones/portrait screens are unchanged. */
+  @media (min-width:900px) and (min-aspect-ratio:5/4){
+    #app{ background:#E9EEEA url('assets/bg_desktop.jpg') left top / cover no-repeat; }
+  }
 </style>
 </head>
 <body>
