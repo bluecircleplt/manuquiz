@@ -35,9 +35,33 @@
   .pill:active{ transform:scale(.98); }
   .foot{ position:absolute; left:8%; width:84%; bottom:2.6%; margin:0; text-align:center; font-size:2.7cqw; line-height:1.4; color:#6f7d73; }
 
-  /* Desktop screens only: Manulife widescreen background behind the centred quiz. Phones/portrait screens are unchanged. */
+
+  /* ===== Desktop skin (wide screens): built from the desktop artwork. Phones / portrait screens are untouched. ===== */
+  #desk{ display:none; position:fixed; inset:0; z-index:5; align-items:center; justify-content:center; background:#f4f5f7; }
+  .dstage{ position:relative; width:min(100vw, calc(100vh * 3000 / 1688)); aspect-ratio:3000 / 1688; container-type:inline-size; }
+  .dscreen{ position:absolute; inset:0; display:none; }
+  .dscreen.on{ display:block; }
+  .dbg{ position:absolute; inset:0; width:100%; height:100%; display:block; user-select:none; -webkit-user-drag:none; pointer-events:none; }
+  .dh{ position:absolute; display:block; background:transparent; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; text-decoration:none; }
+  .dh:focus-visible{ outline:.15cqw solid #00AC5B; outline-offset:.1cqw; }
+  .dh[hidden], .dgrp[hidden]{ display:none !important; }
+  .dring{ position:absolute; border-radius:.9cqw; box-shadow:inset 0 0 0 .14cqw #00AC5B; background:rgba(0,172,91,.12); opacity:0; pointer-events:none; transition:opacity .12s ease; }
+  .dring.on{ opacity:1; }
+  .ddim{ position:absolute; border-radius:.9cqw; background:rgba(247,247,250,.66); pointer-events:none; opacity:0; transition:opacity .12s ease; }
+  .ddim.on{ opacity:1; }
+  .dtick{ position:absolute; border-radius:.3cqw; background:#00AC5B; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .dtick.on{ display:flex; }
+  .dtick svg{ width:72%; height:72%; fill:none; stroke:#fff; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
+  .dinput{ position:absolute; box-sizing:border-box; background:transparent; border:0; outline:0; border-radius:.5cqw; padding:0 1.3cqw; font:400 1.45cqw/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:#132A1E; }
+  .dinput:focus{ box-shadow:inset 0 0 0 .16cqw #00AC5B; }
+  .dinput.adv{ background:#fff; box-shadow:inset 0 0 0 .13cqw #A8E6C0; }
+  .dinput.adv:focus{ box-shadow:inset 0 0 0 .16cqw #00AC5B; }
+  .dlabel{ position:absolute; display:flex; align-items:flex-end; font:800 1.55cqw/1 "Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif; letter-spacing:.04em; color:#00A758; }
+  .dlink:hover{ box-shadow:inset 0 -.09cqw 0 #00823F; }
+  .dfoot{ position:absolute; left:20%; width:60%; bottom:1.2%; margin:0; text-align:center; font:400 1cqw/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:#6f7d73; }
   @media (min-width:900px) and (min-aspect-ratio:5/4){
-    #app{ background:#E9EEEA url('../assets/bg_desktop.jpg') left top / cover no-repeat; }
+    #app{ display:none !important; }
+    #desk{ display:flex; }
   }
 </style>
 </head>
@@ -49,6 +73,12 @@
   <a class="pill green" style="top:73%;" href="../?utm_source=facebook&amp;utm_medium=social_share&amp;utm_campaign=investing_personality_quiz">Start over</a>
   <a class="pill navy" style="top:81.5%; font-size:4.4cqw;" href="https://www.manulifeim.com.my/" target="_blank" rel="noopener">Explore Manulife Investments</a>
   <p class="foot">This quiz is for entertainment purposes only and does not constitute financial advice.</p>
+</div></div>
+<div id="desk"><div class="dstage">
+  <img class="dbg" src="../assets/d/d_rimba_2.webp" alt="Rimba result">
+  <a class="dh dlink" style="left:41.13333333333333%;top:71.32701421800948%;width:19.6%;height:7.5829383886255926%;" href="../?utm_source=facebook&amp;utm_medium=social_share&amp;utm_campaign=investing_personality_quiz" aria-label="Start over"></a>
+  <a class="dh dlink" style="left:41.13333333333333%;top:81.27962085308057%;width:19.6%;height:7.5829383886255926%;" href="https://www.manulifeim.com.my/" target="_blank" rel="noopener" aria-label="Explore Manulife Investments"></a>
+  <p class="dfoot">This quiz is for entertainment purposes only and does not constitute financial advice.</p>
 </div></div>
 </body>
 </html>

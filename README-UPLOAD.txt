@@ -26,3 +26,9 @@ BEFORE GOING LIVE
 DESKTOP BACKGROUND
   On desktop-size screens (wide, 900px and over) the quiz and the shared result pages sit on
   assets/bg_desktop.jpg. Phones, tablets in portrait and the 1080x1920 standee are unchanged.
+
+DESKTOP VERSION (updated)
+  On wide screens (900px and over, landscape) the quiz and the shared result pages use the desktop artwork in
+  assets/d/ (16 slides). Phones, portrait tablets and the 1080x1920 standee keep the original mobile design.
+  The earlier desktop background (bg_desktop.jpg) has been removed.
+  On the desktop info page, the Adviser ID code box appears automatically on 7 Jan 2027 only.

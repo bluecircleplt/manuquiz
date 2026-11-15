@@ -70,9 +70,33 @@
   .skip{ position:absolute; left:30%; width:40%; top:89.6%; text-align:center; background:none; border:none; color:#6f7d73; font-size:3.2cqw; text-decoration:underline; cursor:pointer; padding:1.5cqw 0; }
   #resultImg{ transition:opacity .2s ease; }
 
-  /* Desktop screens only: Manulife widescreen background behind the centred quiz. Phones/portrait screens are unchanged. */
+
+  /* ===== Desktop skin (wide screens): built from the desktop artwork. Phones / portrait screens are untouched. ===== */
+  #desk{ display:none; position:fixed; inset:0; z-index:5; align-items:center; justify-content:center; background:#f4f5f7; }
+  .dstage{ position:relative; width:min(100vw, calc(100vh * 3000 / 1688)); aspect-ratio:3000 / 1688; container-type:inline-size; }
+  .dscreen{ position:absolute; inset:0; display:none; }
+  .dscreen.on{ display:block; }
+  .dbg{ position:absolute; inset:0; width:100%; height:100%; display:block; user-select:none; -webkit-user-drag:none; pointer-events:none; }
+  .dh{ position:absolute; display:block; background:transparent; border:0; padding:0; margin:0; cursor:pointer; -webkit-tap-highlight-color:transparent; text-decoration:none; }
+  .dh:focus-visible{ outline:.15cqw solid #00AC5B; outline-offset:.1cqw; }
+  .dh[hidden], .dgrp[hidden]{ display:none !important; }
+  .dring{ position:absolute; border-radius:.9cqw; box-shadow:inset 0 0 0 .14cqw #00AC5B; background:rgba(0,172,91,.12); opacity:0; pointer-events:none; transition:opacity .12s ease; }
+  .dring.on{ opacity:1; }
+  .ddim{ position:absolute; border-radius:.9cqw; background:rgba(247,247,250,.66); pointer-events:none; opacity:0; transition:opacity .12s ease; }
+  .ddim.on{ opacity:1; }
+  .dtick{ position:absolute; border-radius:.3cqw; background:#00AC5B; display:none; align-items:center; justify-content:center; pointer-events:none; }
+  .dtick.on{ display:flex; }
+  .dtick svg{ width:72%; height:72%; fill:none; stroke:#fff; stroke-width:3.2; stroke-linecap:round; stroke-linejoin:round; }
+  .dinput{ position:absolute; box-sizing:border-box; background:transparent; border:0; outline:0; border-radius:.5cqw; padding:0 1.3cqw; font:400 1.45cqw/1 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:#132A1E; }
+  .dinput:focus{ box-shadow:inset 0 0 0 .16cqw #00AC5B; }
+  .dinput.adv{ background:#fff; box-shadow:inset 0 0 0 .13cqw #A8E6C0; }
+  .dinput.adv:focus{ box-shadow:inset 0 0 0 .16cqw #00AC5B; }
+  .dlabel{ position:absolute; display:flex; align-items:flex-end; font:800 1.55cqw/1 "Arial Narrow","Roboto Condensed","Helvetica Neue",Arial,sans-serif; letter-spacing:.04em; color:#00A758; }
+  .dlink:hover{ box-shadow:inset 0 -.09cqw 0 #00823F; }
+  .dfoot{ position:absolute; left:20%; width:60%; bottom:1.2%; margin:0; text-align:center; font:400 1cqw/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; color:#6f7d73; }
   @media (min-width:900px) and (min-aspect-ratio:5/4){
-    #app{ background:#E9EEEA url('assets/bg_desktop.jpg') left top / cover no-repeat; }
+    #app{ display:none !important; }
+    #desk{ display:flex; }
   }
 </style>
 </head>
@@ -413,7 +437,7 @@ function restart(){
 /* ---------------- hidden staff/admin export (tap top-left corner 5x) ---------------- */
 let tapCount = 0, tapTimer = null;
 document.addEventListener('click', (e) => {
-  if (e.clientX < 60 && e.clientY < 60){
+  if (e.isTrusted && e.clientX < 60 && e.clientY < 60){
     tapCount++;
     clearTimeout(tapTimer);
     tapTimer = setTimeout(()=>{ tapCount = 0; }, 1500);
@@ -431,6 +455,132 @@ document.addEventListener('click', (e) => {
     }
   }
 });
+</script>
+<div id="desk"><div class="dstage" id="dstage"></div></div>
+
+<script>
+/* ===== Desktop skin: the same quiz logic, drawn on the desktop artwork ===== */
+(function(){
+  const DESK = {"intro": {"check": [1140, 1253, 1191, 1303], "label": [1140, 1243, 1862, 1314], "start": [1257, 1355, 1757, 1504]}, "contact": {"name": [1126, 480, 1882, 547], "email": [1126, 677, 1882, 744], "check": [1140, 798, 1191, 848], "text": [1218, 800, 1862, 982], "links": {"privacy": [1463, 906, 1650, 942], "pdpaA": [1672, 906, 1854, 942], "pdpaB": [1221, 940, 1495, 978], "terms": [1563, 940, 1738, 978]}, "adviserLabel": [1126, 1022, 1700, 1066], "adviser": [1126, 1074, 1882, 1141], "start": [1257, 1355, 1757, 1504]}, "q": [{"A": [1684, 550, 2444, 681], "B": [1684, 727, 2444, 859], "C": [1684, 905, 2444, 1036], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 551, 2444, 683], "B": [1684, 726, 2444, 857], "C": [1684, 906, 2444, 1038], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 551, 2444, 683], "B": [1684, 729, 2444, 860], "C": [1684, 906, 2444, 1038], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 549, 2444, 680], "B": [1684, 729, 2444, 860], "C": [1684, 906, 2444, 1038], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 551, 2444, 683], "B": [1684, 726, 2444, 858], "C": [1684, 906, 2444, 1038], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 553, 2444, 684], "B": [1684, 726, 2444, 858], "C": [1684, 904, 2444, 1035], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 553, 2444, 684], "B": [1684, 726, 2444, 858], "C": [1684, 906, 2444, 1037], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}, {"A": [1684, 554, 2444, 685], "B": [1684, 729, 2444, 860], "C": [1684, 906, 2444, 1038], "back": [1697, 1192, 2031, 1341], "next": [2127, 1192, 2460, 1341]}], "result": {"save": [1234, 1204, 1822, 1332], "share": [1234, 1372, 1822, 1500], "startover": [1234, 1204, 1822, 1332], "explore": [1234, 1372, 1822, 1500], "skip": [1501, 1544, 1575, 1589]}, "slides": {"intro": "assets/d/d_intro.webp", "contact": "assets/d/d_contact.webp", "q1": "assets/d/d_q1.webp", "q2": "assets/d/d_q2.webp", "q3": "assets/d/d_q3.webp", "q4": "assets/d/d_q4.webp", "q5": "assets/d/d_q5.webp", "q6": "assets/d/d_q6.webp", "q7": "assets/d/d_q7.webp", "q8": "assets/d/d_q8.webp", "oyen_1": "assets/d/d_oyen_1.webp", "oyen_2": "assets/d/d_oyen_2.webp", "bina_1": "assets/d/d_bina_1.webp", "bina_2": "assets/d/d_bina_2.webp", "rimba_1": "assets/d/d_rimba_1.webp", "rimba_2": "assets/d/d_rimba_2.webp"}, "edge": "#f4f5f7"};
+  const mq = window.matchMedia('(min-width:900px) and (min-aspect-ratio:5/4)');
+  const stage = document.getElementById('dstage');
+  const $ = id => document.getElementById(id);
+  const box = b => `left:${b[0]/30}%;top:${b[1]/16.88}%;width:${(b[2]-b[0])/30}%;height:${(b[3]-b[1])/16.88}%;`;
+  function mk(tag, cls, b, parent, extra){
+    const e = document.createElement(tag); if (cls) e.className = cls; if (b) e.style.cssText = box(b);
+    if (extra) Object.keys(extra).forEach(k => e.setAttribute(k, extra[k]));
+    (parent || stage).appendChild(e); return e;
+  }
+  function screen(id, img){
+    const s = mk('section', 'dscreen', null, stage, { id:'d-' + id });
+    const i = mk('img', 'dbg', null, s, { alt:'', draggable:'false' }); if (img) i.dataset.src = img;
+    return s;
+  }
+  function hit(parent, b, label, fn){
+    const h = mk('button', 'dh', b, parent, { type:'button', 'aria-label':label });
+    h.addEventListener('click', fn); return h;
+  }
+  const CHECK_SVG = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function tick(parent, b){ const t = mk('div', 'dtick', b, parent); t.innerHTML = CHECK_SVG; return t; }
+  const U = {};   // references used by deskRefresh
+
+  /* ---- intro ---- */
+  { const s = screen('intro', DESK.slides.intro), d = DESK.intro;
+    U.tTerms = tick(s, d.check); U.dimStart = mk('div', 'ddim', d.start, s);
+    hit(s, d.label, 'Agree to the Terms and Conditions', () => { $('inTerms').click(); deskRefresh(); });
+    hit(s, d.start, 'Start', () => { $('startBtn').click(); }); }
+
+  /* ---- name + email ---- */
+  { const s = screen('contact', DESK.slides.contact), d = DESK.contact;
+    function field(id, b, mobileId, type){
+      const i = mk('input', 'dinput', b, s, { id:id, type:type, autocomplete:'off', 'aria-label':mobileId });
+      i.addEventListener('input', () => { const m = $(mobileId); m.value = i.value; m.dispatchEvent(new Event('input')); deskRefresh(); });
+      return i;
+    }
+    U.dName = field('dName', d.name, 'inName', 'text');
+    U.dEmail = field('dEmail', d.email, 'inEmail', 'email');
+    U.tConsent = tick(s, d.check);
+    hit(s, d.text, 'Agree to receive marketing materials', () => { $('inConsent').click(); deskRefresh(); });
+    [['privacy','https://www.manulifeim.com.my/privacy-policy.html','Privacy Policy'],
+     ['pdpaA','https://www.manulifeim.com.my/content/dam/wam/my/en/about-us/MY_PDPA.pdf','Personal Data Protection Act (PDPA)'],
+     ['pdpaB','https://www.manulifeim.com.my/content/dam/wam/my/en/about-us/MY_PDPA.pdf','Personal Data Protection Act (PDPA)'],
+     ['terms','https://www.manulifeim.com.my/terms-of-use.html','Terms of Use']].forEach(l => {
+      const a = mk('a', 'dh dlink', d.links[l[0]], s, { href:l[1], target:'_blank', rel:'noopener', 'aria-label':l[2] });
+      a.addEventListener('click', e => e.stopPropagation());
+    });
+    U.advGroup = mk('div', 'dgrp', null, s); U.advGroup.style.cssText = 'position:absolute;inset:0;pointer-events:none;';
+    const lab = mk('label', 'dlabel', d.adviserLabel, U.advGroup, { for:'dAdviser' }); lab.textContent = 'Adviser ID code:'; lab.style.pointerEvents = 'auto';
+    U.dAdviser = mk('input', 'dinput adv', d.adviser, U.advGroup, { id:'dAdviser', type:'text', autocomplete:'off', autocapitalize:'characters', 'aria-label':'Adviser ID code' });
+    U.dAdviser.style.pointerEvents = 'auto';
+    U.dAdviser.addEventListener('input', () => { const m = $('inAdviser'); m.value = U.dAdviser.value; m.dispatchEvent(new Event('input')); deskRefresh(); });
+    U.dimContact = mk('div', 'ddim', d.start, s);
+    hit(s, d.start, 'Start', () => { $('contactOkay').click(); }); }
+
+  /* ---- 8 questions ---- */
+  U.rings = []; U.dimNext = [];
+  DESK.q.forEach((d, idx) => {
+    const n = idx + 1, s = screen('q' + n, DESK.slides['q' + n]);
+    U.rings[n] = {}; ['A','B','C'].forEach(L => { U.rings[n][L] = mk('div', 'dring', d[L], s); });
+    U.dimNext[n] = mk('div', 'ddim', d.next, s);
+    ['A','B','C'].forEach(L => hit(s, d[L], 'Answer ' + L, () => document.querySelector('#screen-q' + n + ' .hit[data-ans="' + L + '"]').click()));
+    hit(s, d.back, 'Back', () => document.querySelector('#screen-q' + n + ' [data-back]').click());
+    hit(s, d.next, 'Next', () => document.querySelector('#screen-q' + n + ' [data-next]').click());
+  });
+
+  /* ---- result (two states: Save/Share, then Start over/Explore) ---- */
+  { const s = screen('result', null), d = DESK.result; U.resImg = s.querySelector('img');
+    U.g1 = mk('div', 'dgrp', null, s); U.g1.style.cssText = 'position:absolute;inset:0;';
+    hit(U.g1, d.save, 'Save image', () => saveImage());
+    hit(U.g1, d.share, 'Share to Facebook', () => shareFacebook());
+    U.skip = hit(U.g1, d.skip, 'Skip', () => showFinish());
+    U.g2 = mk('div', 'dgrp', null, s); U.g2.style.cssText = 'position:absolute;inset:0;'; U.g2.hidden = true;
+    hit(U.g2, d.startover, 'Start over', () => restart());
+    hit(U.g2, d.explore, 'Explore Manulife Investments', () => window.open(CONFIG.EXPLORE_URL, '_blank', 'noopener')); }
+
+  /* ---- keep the desktop drawing in step with the quiz state ---- */
+  let curr = 'intro';
+  function deskShow(t){
+    curr = t;
+    const id = (t === 'intro' || t === 'contact' || t === 'result') ? t : (/^q[1-8]$/.test(t) ? t : null);
+    stage.querySelectorAll('.dscreen').forEach(x => x.classList.remove('on'));
+    if (id) { const el = $('d-' + id); if (el) el.classList.add('on'); }
+    deskRefresh();
+  }
+  function deskRefresh(){
+    U.tTerms.classList.toggle('on', $('inTerms').checked);
+    U.dimStart.classList.toggle('on', $('startBtn').disabled);
+    U.tConsent.classList.toggle('on', $('inConsent').checked);
+    U.dimContact.classList.toggle('on', $('contactOkay').disabled);
+    U.advGroup.hidden = $('adviserGroup').hidden;
+    if (U.dName.value !== $('inName').value) U.dName.value = $('inName').value;
+    if (U.dEmail.value !== $('inEmail').value) U.dEmail.value = $('inEmail').value;
+    if (U.dAdviser.value !== $('inAdviser').value) U.dAdviser.value = $('inAdviser').value;
+    for (let n = 1; n <= 8; n++){
+      const a = state.answers[n - 1];
+      ['A','B','C'].forEach(L => U.rings[n][L].classList.toggle('on', a === L));
+      U.dimNext[n].classList.toggle('on', a == null);
+    }
+    const finished = !$('btnStartOver').hidden;
+    U.g1.hidden = finished; U.g2.hidden = !finished;
+    U.skip.hidden = $('btnSkip').hidden;
+    if (state.top){ U.resImg.dataset.src = DESK.slides[SLUG[state.top] + (finished ? '_2' : '_1')]; if (loaded) U.resImg.src = U.resImg.dataset.src; }
+  }
+  let loaded = false;
+  function loadImages(){
+    if (loaded || !mq.matches) return; loaded = true;
+    stage.querySelectorAll('img[data-src]').forEach(i => { i.src = i.dataset.src; });
+  }
+
+  /* wrap the quiz functions so the desktop drawing follows along */
+  const _goTo = goTo;               goTo = function(t){ _goTo(t); deskShow(t); };
+  const _select = selectAnswer;     selectAnswer = function(q, L){ _select(q, L); deskRefresh(); };
+  const _validate = validateContact; validateContact = function(){ _validate(); deskRefresh(); };
+  const _reset = resetResultButtons; resetResultButtons = function(){ _reset(); deskRefresh(); };
+  const _finish = showFinish;       showFinish = function(){ _finish(); deskRefresh(); };
+
+  mq.addEventListener('change', loadImages);
+  loadImages(); deskShow('intro');
+})();
 </script>
 </body>
 </html>
